@@ -1,4 +1,4 @@
-name: Build All Actions
+name: Build And Tag
 
 on:
   pull_request:
@@ -35,20 +35,56 @@ jobs:
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           echo "::set-output name=version::$VERSION"
 
+      # Run ncc to generate dist
       - uses: tool3/ncc@master
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           src: 'src/index.ts'
           branch: 'main'
+
+      # Create a file to store the version
+      - name: Save version to a file
+        run: echo "${{ steps.npm-build.outputs.version }}" > version.txt
+
+      # Upload the version information
+      - name: Upload version information
+        uses: actions/upload-artifact@v1
+        with:
+          name: version
+          path: version.txt
+
+      # Upload the build artifact
       - uses: actions/upload-artifact@v1
         with:
           name: dist
           path: dist/
 
+  tag:
+    needs: [build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      repository-projects: write
+
+
+    steps:
+      # Download the version information
+      - name: Download version information
+        uses: actions/download-artifact@v1
+        with:
+          name: version
+
+      # Extract the version from the file and set it as an output variable
+      - name: Get the version
+        id: get_version
+        run: echo "::set-output name=version::$(cat version.txt)"
+
+      # Use the version for tagging
       - name: Bump version and push tag
         if: github.ref == 'refs/heads/main'
         id: tag_version
         uses: mathieudutour/github-tag-action@v6.1
         with:
-          custom_tag: ${{ steps.npm-build.outputs.version }}
+          custom_tag: ${{ steps.get_version.outputs.version }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
