@@ -19,5 +19,5 @@ outputs:
     description: 'Output from Gradle'
 
 runs:
-  using: node16
-  main: dist/index.js
+  using: 'docker'
+  image: 'Dockerfile'

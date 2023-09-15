@@ -1,6 +1,6 @@
 {
   "name": "@actions/execute-gradle-tasks-on-projects",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Finds the project test coverage based on gradle output, assuming the project uses Kover",
   "main": "dist/index.js",
   "scripts": {
